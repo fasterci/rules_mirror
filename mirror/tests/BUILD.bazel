@@ -1,3 +1,28 @@
-load(":versions_test.bzl", "versions_test_suite")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@com_adobe_rules_gitops//skylib/kustomize:kustomize.bzl", "kustomize")
+load("//mirror:defs.bzl", "mirror_image")
 
-versions_test_suite(name = "versions_test")
+mirror_image(
+    name = "alpine",
+    digest = "sha256:954b378c375d852eb3c63ab88978f640b4348b01c1b3456a024a81536dafbbf4",
+    dst_prefix = "gcr.io/fasterci-dev/mirror",
+    src_image = "index.docker.io/library/alpine:3.8",
+)
+
+kustomize(
+    name = "kustomize1",
+    testonly = True,
+    images = [
+        ":alpine",
+    ],
+    manifests = [
+        "deployment.yaml",
+    ],
+    namespace = "",
+)
+
+diff_test(
+    name = "deployment_image_test",
+    file1 = ":kustomize1",
+    file2 = "kustomize1.golden",
+)

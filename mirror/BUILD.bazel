@@ -1,22 +1,17 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
-# For stardoc to reference the files
-exports_files(["defs.bzl"])
-
-# This is the target rule authors should put in their "toolchains"
-# attribute in order to get a runtime for the correct platform.
-# See https://docs.bazel.build/versions/main/toolchains.html#writing-rules-that-use-toolchains
-toolchain_type(
-    name = "toolchain_type",
-    visibility = ["//visibility:public"],
-)
+exports_files([
+    # For stardoc to reference the files
+    "defs.bzl",
+    # For mirror rule
+    "mirror_image.sh",
+])
 
 bzl_library(
     name = "repositories",
     srcs = ["repositories.bzl"],
     visibility = ["//visibility:public"],
     deps = [
-        "//mirror/private:toolchains_repo",
         "//mirror/private:versions",
         "@bazel_tools//tools/build_defs/repo:http.bzl",
         "@bazel_tools//tools/build_defs/repo:utils.bzl",
@@ -27,10 +22,5 @@ bzl_library(
     name = "defs",
     srcs = ["defs.bzl"],
     visibility = ["//visibility:public"],
-)
-
-bzl_library(
-    name = "toolchain",
-    srcs = ["toolchain.bzl"],
-    visibility = ["//visibility:public"],
+    deps = ["@com_adobe_rules_gitops//skylib:push"],
 )
