@@ -1,9 +1,5 @@
 # Declare the local Bazel workspace.
 workspace(
-    # If your ruleset is "official"
-    # (i.e. is in the bazelbuild GitHub org)
-    # then this should just be named "rules_mirror"
-    # see https://docs.bazel.build/versions/main/skylark/deploying.html#workspace
     name = "com_fasterci_rules_mirror",
 )
 # gazelle:repo bazel_gazelle
