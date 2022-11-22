@@ -23,9 +23,9 @@ def rules_mirror_dependencies():
 
     http_archive(
         name = "com_adobe_rules_gitops",
-        sha256 = "0030c861f5fd4920702eed29cfd03f597c6704d37bc0bedf9e7adf083790629a",
-        strip_prefix = "rules_gitops-0.12.0",
-        url = "https://github.com/adobe/rules_gitops/archive/refs/tags/v0.12.0.tar.gz",
+        sha256 = "3afbca873449a5cf2788fa9c3b25c01dc26b56a7175e1b8bbc677d9319af4f3b",
+        strip_prefix = "rules_gitops-0.13.0",
+        url = "https://github.com/adobe/rules_gitops/archive/refs/tags/v0.13.0.tar.gz",
     )
 
     http_archive(
@@ -33,4 +33,3 @@ def rules_mirror_dependencies():
         sha256 = "b1e80761a8a8243d03ebca8845e9cc1ba6c82ce7c5179ce2b295cd36f7e394bf",
         urls = ["https://github.com/bazelbuild/rules_docker/releases/download/v0.25.0/rules_docker-v0.25.0.tar.gz"],
     )
-

@@ -66,3 +66,9 @@ def rules_mirror_internal_deps():
         strip_prefix = "protobuf-3.11.4",
         urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.11.4.zip"],
     )
+
+    # optionally override the default version of rules_gitops with a local copy
+    # local_repository(
+    #     name = "com_adobe_rules_gitops",
+    #     path = "../rules_gitops",
+    # )
