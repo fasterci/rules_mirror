@@ -1,19 +1,21 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_test")
 load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
 load("@com_adobe_rules_gitops//skylib/kustomize:kustomize.bzl", "kustomize")
 load("//mirror:defs.bzl", "mirror_image")
+load("@com_adobe_rules_gitops//gitops:defs.bzl", "k8s_deploy", "k8s_test_setup")
 
 mirror_image(
-    name = "alpine",
-    digest = "sha256:954b378c375d852eb3c63ab88978f640b4348b01c1b3456a024a81536dafbbf4",
+    name = "agnhost",
+    digest = "sha256:93c166faf53dba3c9c4227e2663ec1247e2a9a193d7b59eddd15244a3e331c3e",
     dst_prefix = "gcr.io/fasterci-dev/mirror",
-    src_image = "index.docker.io/library/alpine:3.8",
+    src_image = "registry.k8s.io/e2e-test-images/agnhost:2.39",
 )
 
 kustomize(
     name = "kustomize1",
     testonly = True,
     images = [
-        ":alpine",
+        ":agnhost",
     ],
     manifests = [
         "deployment.yaml",
@@ -25,4 +27,40 @@ diff_test(
     name = "deployment_image_test",
     file1 = ":kustomize1",
     file2 = "kustomize1.golden",
+)
+
+# use k8s_deploy with mirrored image
+k8s_deploy(
+    name = "simple_server",
+    image_pushes = [
+        ":agnhost",
+    ],
+    manifests = [
+        "deployment.yaml",
+        "service.yaml",
+    ],
+    namespace = "{BUILD_USER}",
+)
+
+# use k8s_deploy in IT test
+k8s_test_setup(
+    name = "simple_server_it.setup",
+    kubeconfig = "@k8s_test//:kubeconfig",
+    objects = [
+        ":simple_server",
+    ],
+)
+
+go_test(
+    name = "simple_server_test",
+    size = "large",
+    srcs = ["simple_server_test.go"],
+    args = [
+        "-setup",
+        "$(location :simple_server_it.setup)",
+    ],
+    data = [
+        ":service_it.setup",
+    ],
+    deps = ["@com_github_adobe_rules_gitops//testing/it_sidecar/client:go_default_library"],
 )

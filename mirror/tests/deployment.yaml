@@ -13,4 +13,7 @@ spec:
     spec:
       containers:
       - name: myapp
-        image: //mirror/tests:alpine
+        image: //mirror/tests:agnhost
+        ports:
+          - containerPort: 8080
+

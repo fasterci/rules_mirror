@@ -1,5 +1,6 @@
 "Public API re-exports"
 
+load("@io_bazel_rules_docker//container:providers.bzl", "PushInfo")
 load("@com_adobe_rules_gitops//skylib:push.bzl", "K8sPushInfo")
 
 def _mirror_image_impl(ctx):
@@ -34,6 +35,11 @@ def _mirror_image_impl(ctx):
             runfiles = ctx.runfiles(files = [ctx.executable.mirror_tool]),
             files = depset([digest_file]),
             executable = ctx.outputs.executable,
+        ),
+        PushInfo(
+            registry = dst_registry,
+            repository = dst_repository,
+            digest = digest_file,
         ),
         K8sPushInfo(
             image_label = ctx.label,

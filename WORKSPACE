@@ -4,6 +4,11 @@ workspace(
 )
 # gazelle:repo bazel_gazelle
 
+local_repository(
+    name = "com_adobe_rules_gitops",
+    path = "../rules_gitops",
+)
+
 load(":internal_deps.bzl", "rules_mirror_internal_deps")
 
 # Fetch deps needed only locally for development
@@ -43,3 +48,11 @@ rules_gitops_dependencies()
 load("@com_adobe_rules_gitops//gitops:repositories.bzl", "rules_gitops_repositories")
 
 rules_gitops_repositories()
+
+load("@com_adobe_rules_gitops//skylib:k8s.bzl", "kubeconfig")
+
+kubeconfig(
+    name = "k8s_test",
+    cluster = "testcluster",
+    use_host_config = True,
+)

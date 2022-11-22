@@ -12,6 +12,7 @@ def http_archive(name, **kwargs):
 
 def rules_mirror_internal_deps():
     "Fetch deps needed for local development"
+
     http_archive(
         name = "io_bazel_rules_go",
         sha256 = "099a9fb96a376ccbbb7d291ed4ecbdfd42f6bc822ab77ae6f1b5cb9e914e94fa",
