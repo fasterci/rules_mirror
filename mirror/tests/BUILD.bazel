@@ -60,7 +60,7 @@ go_test(
         "$(location :simple_server_it.setup)",
     ],
     data = [
-        ":service_it.setup",
+        ":simple_server_it.setup",
     ],
     deps = ["@com_github_adobe_rules_gitops//testing/it_sidecar/client:go_default_library"],
 )

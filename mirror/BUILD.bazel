@@ -22,5 +22,5 @@ bzl_library(
     name = "defs",
     srcs = ["defs.bzl"],
     visibility = ["//visibility:public"],
-    deps = ["@com_adobe_rules_gitops//skylib:push"],
+    # deps = ["@com_adobe_rules_gitops//skylib:push"],
 )
