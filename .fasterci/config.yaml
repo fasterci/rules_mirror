@@ -1,0 +1,28 @@
+# configure vscode yaml support https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml
+# yaml-language-server: $schema=https://fasterci.com/config.schema.json
+workflows:
+
+  - &build_workflow
+    name: Faster CI / build (5.3.0)
+    image: us.gcr.io/fasterci/bazelbuilder:9530886
+    on:
+      push:
+        branches:
+          - main
+      pull_request:
+        branches:
+          - "**"
+    steps:
+      - name: Build & test
+        bazel:
+          build_targets:
+            - //...
+          test_flags:
+            - --test_size_filters=-large,-enormous
+          test_targets:
+            - //...
+
+  - <<: *build_workflow
+    name: Faster CI / build (5.1.1)
+    env:
+      USE_BAZEL_VERSION: "5.1.1"
