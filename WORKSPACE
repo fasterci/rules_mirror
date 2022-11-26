@@ -4,6 +4,13 @@ workspace(
 )
 # gazelle:repo bazel_gazelle
 
+# optionally override the default version of rules_gitops with a local copy
+local_repository(
+    name = "com_adobe_rules_gitops",
+    path = "../rules_gitops",
+)
+
+
 load(":internal_deps.bzl", "rules_mirror_internal_deps")
 
 # Fetch deps needed only locally for development

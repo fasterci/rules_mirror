@@ -30,10 +30,11 @@ def _mirror_image_impl(ctx):
     dst_without_hash = ctx.attr.dst_prefix + "/" + src_repository
     dst_registry, dst_repository = dst_without_hash.split("/", 1)
 
+    runfiles = ctx.runfiles(files = [digest_file]).merge(ctx.attr.mirror_tool[DefaultInfo].default_runfiles)
+
     return [
         DefaultInfo(
-            runfiles = ctx.runfiles(files = [ctx.executable.mirror_tool]),
-            files = depset([digest_file]),
+            runfiles = runfiles,
             executable = ctx.outputs.executable,
         ),
         PushInfo(
