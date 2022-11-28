@@ -10,8 +10,8 @@ def go_dependencies():
     go_repository(
         name = "com_github_adobe_rules_gitops",
         importpath = "github.com/adobe/rules_gitops",
-        sum = "h1:U6lwcRuKinmANNE5sS5Dor22k4VLqDtt0EqFALVksRE=",
-        version = "v0.12.0",
+        sum = "h1:hp5xfNNXCnksY7G5mRxXlf/IugxNvHw5fQbbBEEDn/g=",
+        version = "v0.14.0",
     )
     go_repository(
         name = "com_github_asaskevich_govalidator",

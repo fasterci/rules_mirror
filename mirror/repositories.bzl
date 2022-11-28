@@ -23,9 +23,9 @@ def rules_mirror_dependencies():
 
     http_archive(
         name = "com_adobe_rules_gitops",
-        sha256 = "3afbca873449a5cf2788fa9c3b25c01dc26b56a7175e1b8bbc677d9319af4f3b",
-        strip_prefix = "rules_gitops-0.13.0",
-        url = "https://github.com/adobe/rules_gitops/archive/refs/tags/v0.13.0.tar.gz",
+        sha256 = "f2e9ae6bc7c03ecdbc114b900270b661068b175ecbff597df78aad866f1dd5b8",
+        strip_prefix = "rules_gitops-0.14.0",
+        url = "https://github.com/adobe/rules_gitops/archive/refs/tags/v0.14.0.tar.gz",
     )
 
     http_archive(
