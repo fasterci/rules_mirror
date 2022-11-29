@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"path"
 
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/logs"
@@ -15,19 +14,19 @@ import (
 
 var (
 	FromLocation string
-	ToPrefix     string
+	To           string
 	Digest       string
 )
 
 func init() {
 	flag.StringVar(&FromLocation, "from", "", "The location of the image to mirror, required")
-	flag.StringVar(&ToPrefix, "to_prefix", "", "The registry and repository prefix to mirror the image to, required")
+	flag.StringVar(&To, "to", "", "The location of the mirror destination, required")
 	flag.StringVar(&Digest, "digest", "", "The digest of the image, like sha256:1234, required")
 }
 
 func ExecuteContext(ctx context.Context) error {
 	// verify that the flags are set
-	if FromLocation == "" || ToPrefix == "" || Digest == "" {
+	if FromLocation == "" || To == "" || Digest == "" {
 		return flag.ErrHelp
 	}
 	ref, err := name.ParseReference(FromLocation)
@@ -35,17 +34,16 @@ func ExecuteContext(ctx context.Context) error {
 		return err
 	}
 	logs.Debug.Printf("in: %s/%s:%s", ref.Context().RegistryStr(), ref.Context().RepositoryStr(), ref.Identifier())
-	dst := fmt.Sprintf("%s:%s", path.Join(ToPrefix, ref.Context().RegistryStr(), ref.Context().RepositoryStr()), ref.Identifier())
-	logs.Debug.Print("out:", dst)
-	dstRef, err := name.ParseReference(dst)
+	dstRef, err := name.ParseReference(To)
 	if err != nil {
 		return err
 	}
+	logs.Debug.Print("out:", dstRef)
 	hash, err := v1.NewHash(Digest)
 	if err != nil {
 		return err
 	}
-	shadst := fmt.Sprintf("%s@%s", path.Join(ToPrefix, ref.Context().RegistryStr(), ref.Context().RepositoryStr()), hash.String())
+shadst := fmt.Sprintf("%s@%s", dstRef.Context(), hash.String())
 	shaDstRef, err := name.ParseReference(shadst)
 	if err != nil {
 		return err

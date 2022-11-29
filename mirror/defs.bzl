@@ -4,10 +4,26 @@ load("@io_bazel_rules_docker//container:providers.bzl", "PushInfo")
 load("@com_adobe_rules_gitops//skylib:push.bzl", "K8sPushInfo")
 
 def _mirror_image_impl(ctx):
+    digest = ctx.attr.digest
+    v = ctx.attr.src_image.split("@", 1)
+    s = v[0]
+    if len(v) > 1:
+        # If the image has a digest, use that.
+        if digest and v[1] != digest:
+            fail("digest mismatch: %s != %s" % (v[1], digest))
+        digest = v[1]
+
+    v = s.split(":", 1)
+    src_repository = v[0]
+    tag = ""
+    if len(v) > 1:
+        tag = ":"+v[1]
+    dst_without_hash = ctx.attr.dst_prefix.strip("/") + "/" + src_repository + tag
+
     digest_file = ctx.actions.declare_file(ctx.label.name + ".digest")
     ctx.actions.write(
         output = digest_file,
-        content = ctx.attr.digest,
+        content = digest,
     )
 
     ctx.actions.expand_template(
@@ -16,18 +32,12 @@ def _mirror_image_impl(ctx):
         substitutions = {
             "{mirror_tool}": ctx.executable.mirror_tool.short_path,
             "{src_image}": ctx.attr.src_image,
-            "{digest}": ctx.attr.digest,
-            "{dst_prefix}": ctx.attr.dst_prefix,
+            "{digest}": digest,
+            "{dst_image}": dst_without_hash,
         },
         is_executable = True,
     )
 
-    # keep this in sync with image mirror tool implementation
-    # _, s = ctx.attr.src_image.split("/", 1)
-    s = ctx.attr.src_image.split("@", 1)[0]
-    src_repository = s.split(":", 1)[0]
-
-    dst_without_hash = ctx.attr.dst_prefix + "/" + src_repository
     dst_registry, dst_repository = dst_without_hash.split("/", 1)
 
     runfiles = ctx.runfiles(files = [digest_file]).merge(ctx.attr.mirror_tool[DefaultInfo].default_runfiles)
