@@ -18,7 +18,7 @@ def _mirror_image_impl(ctx):
     tag = ""
     if len(v) > 1:
         tag = ":"+v[1]
-    dst_without_hash = ctx.attr.dst_prefix.strip("/") + "/" + src_repository + tag
+    dst_without_hash = ctx.attr.dst_prefix.strip("/") + "/" + src_repository 
 
     digest_file = ctx.actions.declare_file(ctx.label.name + ".digest")
     ctx.actions.write(
@@ -33,7 +33,7 @@ def _mirror_image_impl(ctx):
             "{mirror_tool}": ctx.executable.mirror_tool.short_path,
             "{src_image}": ctx.attr.src_image,
             "{digest}": digest,
-            "{dst_image}": dst_without_hash,
+            "{dst_image}": dst_without_hash + tag,
         },
         is_executable = True,
     )
