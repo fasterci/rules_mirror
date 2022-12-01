@@ -43,17 +43,21 @@ func ExecuteContext(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-shadst := fmt.Sprintf("%s@%s", dstRef.Context(), hash.String())
+	shadst := fmt.Sprintf("%s@%s", dstRef.Context(), hash.String())
 	shaDstRef, err := name.ParseReference(shadst)
 	if err != nil {
 		return err
 	}
 	// fetch dst manifest
-	logs.Progress.Printf("fetching manifest for %s", shaDstRef)
-	_, err = remote.Head(shaDstRef, remote.WithAuthFromKeychain(authn.DefaultKeychain))
+	checkref := shaDstRef
+	if _, ok := dstRef.(name.Tag); ok {
+		checkref = dstRef
+	}
+	logs.Progress.Printf("fetching manifest for %s", checkref)
+	_, err = remote.Head(checkref, remote.WithAuthFromKeychain(authn.DefaultKeychain))
 	if err == nil {
 		// if the dst manifest exists, check if it's the same as the src
-		logs.Progress.Printf("found manifest for %s", shaDstRef)
+		logs.Progress.Printf("found manifest for %s", checkref)
 		return nil
 	}
 	logs.Progress.Printf("fetching manifest for %s", ref)
