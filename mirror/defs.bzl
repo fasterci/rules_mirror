@@ -2,6 +2,11 @@
 
 load("@io_bazel_rules_docker//container:providers.bzl", "PushInfo")
 load("@com_adobe_rules_gitops//skylib:push.bzl", "K8sPushInfo")
+load("@io_bazel_rules_docker//skylib:path.bzl", "runfile")
+
+def _get_runfile_path(ctx, f):
+    return "${RUNFILES}/%s" % runfile(ctx, f)
+
 
 def _mirror_image_impl(ctx):
     digest = ctx.attr.digest
@@ -49,7 +54,7 @@ def _mirror_image_impl(ctx):
         template = ctx.file._mirror_image_script,
         output = ctx.outputs.executable,
         substitutions = {
-            "{mirror_tool}": ctx.executable.mirror_tool.short_path,
+            "{mirror_tool}": _get_runfile_path(ctx, ctx.executable.mirror_tool),
             "{src_image}": ctx.attr.src_image,
             "{digest}": digest,
             "{dst_image}": dst_without_hash + tag,
