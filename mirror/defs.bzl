@@ -18,6 +18,9 @@ def _mirror_image_impl(ctx):
             fail("digest mismatch: %s != %s" % (v[1], digest))
         digest = v[1]
 
+    if not digest:
+        fail("digest must be provided as an attribute to mirror_image or in the src_image")
+
     tag = ""
     dst_without_hash = ""
     if ctx.attr.dst:
