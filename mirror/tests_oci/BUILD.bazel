@@ -1,30 +1,20 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_test")
 load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
-load("@com_adobe_rules_gitops//skylib/kustomize:kustomize.bzl", "kustomize")
-load("//mirror:defs.bzl", "mirror_image")
-load("@com_adobe_rules_gitops//gitops:defs.bzl", "k8s_deploy", "k8s_test_setup")
-load("@com_adobe_rules_gitops//skylib:push.bzl", "k8s_container_push")
-load(":lrf.bzl", "list_runfiles")
+load("@rules_gitops//skylib/kustomize:kustomize.bzl", "kustomize")
+load("@rules_gitops//gitops:defs.bzl", "k8s_deploy", "k8s_test_setup")
+load("@rules_gitops//push_oci:push_oci.bzl", "push_oci")
 
-mirror_image(
-    name = "agnhost",
-    digest = "sha256:93c166faf53dba3c9c4227e2663ec1247e2a9a193d7b59eddd15244a3e331c3e",
-    dst_prefix = "us-central1-docker.pkg.dev/rules-gitops-demo/it/mirror",
-    src_image = "registry.k8s.io/e2e-test-images/agnhost:2.39",
-    visibility = ["//visibility:public"],
-)
-
-k8s_container_push(
+push_oci(
     name = "agnhost_push",
-    image = ":agnhost",
-    registry = "gcr.io/fasterci-dev",
+    image = "//mirror/tests:agnhost",
+    repository = "us-central1-docker.pkg.dev/rules-gitops-demo/it",  # this registry is no op if the iamge parameter refers to a pushed image (mirror or k8s_container_push target)
 )
 
 kustomize(
     name = "kustomize1",
     testonly = True,
     images = [
-        ":agnhost",
+        "//mirror/tests:agnhost",
     ],
     manifests = [
         "deployment.yaml",
@@ -41,19 +31,17 @@ diff_test(
 # use k8s_deploy with mirrored image
 k8s_deploy(
     name = "simple_server",
+    cluster = "gke_rules-gitops-demo_us-central1_cluster-demo",
+    gitops = False,
     images = [
-        ":agnhost",
+        "//mirror/tests:agnhost",
     ],
     manifests = [
         "deployment.yaml",
         "service.yaml",
     ],
     namespace = "{BUILD_USER}",
-)
-
-list_runfiles(
-    name = "lrf",
-    data = [":simple_server.apply"],
+    user = "gke_rules-gitops-demo_us-central1_cluster-demo",
 )
 
 # use k8s_deploy in IT test

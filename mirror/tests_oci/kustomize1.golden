@@ -12,7 +12,7 @@ spec:
         app: myapp
     spec:
       containers:
-      - image: us-central1-docker.pkg.dev/rules-gitops-demo/it/mirror/registry.k8s.io/e2e-test-images/agnhost@sha256:93c166faf53dba3c9c4227e2663ec1247e2a9a193d7b59eddd15244a3e331c3
+      - image: us-central1-docker.pkg.dev/rules-gitops-demo/it/mirror/registry.k8s.io/e2e-test-images/agnhost@sha256:93c166faf53dba3c9c4227e2663ec1247e2a9a193d7b59eddd15244a3e331c3e
         name: myapp
         ports:
         - containerPort: 8080
