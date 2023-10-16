@@ -1,12 +1,9 @@
 "Public API re-exports"
 
+load("@rules_gitops//gitops:provider.bzl", "GitopsPushInfo")
 load("@io_bazel_rules_docker//container:providers.bzl", "PushInfo")
 load("@com_adobe_rules_gitops//skylib:push.bzl", "K8sPushInfo")
-load("@io_bazel_rules_docker//skylib:path.bzl", "runfile")
-
-def _get_runfile_path(ctx, f):
-    return "${RUNFILES}/%s" % runfile(ctx, f)
-
+load("@rules_gitops//skylib:runfile.bzl", "get_runfile_path")
 
 def _mirror_image_impl(ctx):
     digest = ctx.attr.digest
@@ -37,9 +34,9 @@ def _mirror_image_impl(ctx):
         src_repository = v[0]
         tag = ""
         if len(v) > 1:
-            tag = ":"+v[1]
+            tag = ":" + v[1]
         dst_prefix = ctx.expand_make_variables("dst_prefix", ctx.attr.dst_prefix, {})
-        dst_without_hash = dst_prefix.strip("/") + "/" + src_repository 
+        dst_without_hash = dst_prefix.strip("/") + "/" + src_repository
 
     digest_file = ctx.actions.declare_file(ctx.label.name + ".digest")
     ctx.actions.write(
@@ -48,6 +45,7 @@ def _mirror_image_impl(ctx):
     )
 
     pusher_input = [digest_file]
+
     # If a tag file is provided, override <tag> with tag value
     if ctx.file.tag_file:
         tag = ":$(cat {})".format(ctx.file.tag_file.short_path)
@@ -57,7 +55,7 @@ def _mirror_image_impl(ctx):
         template = ctx.file._mirror_image_script,
         output = ctx.outputs.executable,
         substitutions = {
-            "{mirror_tool}": _get_runfile_path(ctx, ctx.executable.mirror_tool),
+            "{mirror_tool}": get_runfile_path(ctx, ctx.executable.mirror_tool),
             "{src_image}": ctx.attr.src_image,
             "{digest}": digest,
             "{dst_image}": dst_without_hash + tag,
@@ -86,6 +84,11 @@ def _mirror_image_impl(ctx):
             repository = dst_repository,
             digestfile = digest_file,
         ),
+        GitopsPushInfo(
+            image_label = ctx.label,
+            repository = "{}/{}".format(dst_registry, dst_repository),
+            digestfile = digest_file,
+        ),
     ]
 
 mirror_image = rule(
@@ -112,9 +115,8 @@ mirror_image = rule(
             allow_single_file = True,
             doc = "(optional) The label of the file with dst tag value. Overrides tag if provided in the dst.",
         ),
-
         "mirror_tool": attr.label(
-            default = Label("@com_fasterci_rules_mirror//cmd/mirror"),
+            default = Label("//cmd/mirror"),
             executable = True,
             cfg = "exec",
         ),
