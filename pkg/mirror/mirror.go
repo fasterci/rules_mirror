@@ -2,7 +2,6 @@ package mirror
 
 import (
 	"context"
-	"flag"
 	"fmt"
 
 	"github.com/google/go-containerregistry/pkg/authn"
@@ -12,34 +11,22 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 )
 
-var (
-	FromLocation string
-	To           string
-	Digest       string
-)
-
-func init() {
-	flag.StringVar(&FromLocation, "from", "", "The location of the image to mirror, required")
-	flag.StringVar(&To, "to", "", "The location of the mirror destination, required")
-	flag.StringVar(&Digest, "digest", "", "The digest of the image, like sha256:1234, required")
-}
-
-func ExecuteContext(ctx context.Context) error {
-	// verify that the flags are set
-	if FromLocation == "" || To == "" || Digest == "" {
-		return flag.ErrHelp
-	}
-	ref, err := name.ParseReference(FromLocation)
+func ExecuteContext(ctx context.Context, fromLocation, to, digest string) error {
+	ref, err := name.ParseReference(fromLocation)
 	if err != nil {
 		return err
 	}
 	logs.Debug.Printf("in: %s/%s:%s", ref.Context().RegistryStr(), ref.Context().RepositoryStr(), ref.Identifier())
-	dstRef, err := name.ParseReference(To)
+	dstRef, err := name.ParseReference(to)
 	if err != nil {
 		return err
 	}
 	logs.Debug.Print("out:", dstRef)
-	hash, err := v1.NewHash(Digest)
+	hash, err := v1.NewHash(digest)
+	if err != nil {
+		return err
+	}
+	ref, err = name.ParseReference(fmt.Sprintf("%s@%s", ref.Context(), hash.String()))
 	if err != nil {
 		return err
 	}
@@ -48,37 +35,42 @@ func ExecuteContext(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	// fetch dst manifest
-	checkref := shaDstRef
+	// check if dst exists already
 	if _, ok := dstRef.(name.Tag); ok {
-		checkref = dstRef
-	}
-	logs.Progress.Printf("fetching manifest for %s", checkref)
-	_, err = remote.Head(checkref, remote.WithAuthFromKeychain(authn.DefaultKeychain))
-	if err == nil {
-		// if the dst manifest exists, check if it's the same as the src
-		logs.Progress.Printf("found manifest for %s", checkref)
-		return nil
+		logs.Progress.Printf("fetching manifest for %s", dstRef)
+		dst, err := remote.Get(dstRef, remote.WithAuthFromKeychain(authn.DefaultKeychain), remote.WithContext(ctx))
+		if err == nil {
+			// if the dst manifest exists, check if it's the same as the src
+			logs.Progress.Printf("found manifest for %s", dstRef)
+			if dst.Digest.String() == hash.String() {
+				return nil
+			}
+		}
+	} else {
+		logs.Progress.Printf("fetching manifest for %s", shaDstRef)
+		_, err = remote.Head(shaDstRef, remote.WithAuthFromKeychain(authn.DefaultKeychain), remote.WithContext(ctx))
+		if err == nil {
+			// if the dst manifest exists, check if it's the same as the src
+			logs.Progress.Printf("found manifest for %s", shaDstRef)
+			return nil
+		}
+
 	}
 	logs.Progress.Printf("fetching manifest for %s", ref)
-	src, err := remote.Get(ref, remote.WithAuthFromKeychain(authn.DefaultKeychain))
+	src, err := remote.Get(ref, remote.WithAuthFromKeychain(authn.DefaultKeychain), remote.WithContext(ctx))
 	if err != nil {
 		return err
+	}
+	if src.Digest != hash {
+		return fmt.Errorf("src digest %s does not match expected %s", src.Digest, hash)
 	}
 	logs.Progress.Printf("fetching image for %s", ref)
 	image, err := src.Image()
 	if err != nil {
 		return fmt.Errorf("unable to fetch source image %s: %v", ref, err)
 	}
-	imgDigest, err := image.Digest()
-	if err != nil {
-		return fmt.Errorf("unable to get digest for image %s: %v", ref, err)
-	}
-	if imgDigest != hash {
-		return fmt.Errorf("src digest %s does not match expected %s", imgDigest, hash)
-	}
 	logs.Progress.Printf("pushing image to %s", dstRef)
-	if err := remote.Write(dstRef, image, remote.WithAuthFromKeychain(authn.DefaultKeychain)); err != nil {
+	if err := remote.Write(dstRef, image, remote.WithAuthFromKeychain(authn.DefaultKeychain), remote.WithContext(ctx)); err != nil {
 		return err
 	}
 

@@ -54,7 +54,7 @@ k8s_test_setup(
 )
 
 go_test(
-    name = "simple_server_test",
+    name = "tests_oci_test",
     size = "large",
     srcs = ["simple_server_test.go"],
     args = [
@@ -63,5 +63,5 @@ go_test(
     ],
     data = [":simple_server_it.setup"],
     rundir = ".",
-    deps = ["@com_github_adobe_rules_gitops//testing/it_sidecar/client:go_default_library"],
+    deps = ["@com_github_adobe_rules_gitops//testing/it_sidecar/client"],
 )
