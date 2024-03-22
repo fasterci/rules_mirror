@@ -9,14 +9,16 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
+	"github.com/google/go-containerregistry/pkg/v1/types"
 )
 
 func ExecuteContext(ctx context.Context, fromLocation, to, digest string) error {
-	ref, err := name.ParseReference(fromLocation)
+	fromRef, err := name.ParseReference(fromLocation)
 	if err != nil {
 		return err
 	}
-	logs.Debug.Printf("in: %s/%s:%s", ref.Context().RegistryStr(), ref.Context().RepositoryStr(), ref.Identifier())
+	logs.Debug.Printf("in: %s/%s:%s", fromRef.Context().RegistryStr(), fromRef.Context().RepositoryStr(), fromRef.Identifier())
 	dstRef, err := name.ParseReference(to)
 	if err != nil {
 		return err
@@ -26,12 +28,12 @@ func ExecuteContext(ctx context.Context, fromLocation, to, digest string) error 
 	if err != nil {
 		return err
 	}
-	ref, err = name.ParseReference(fmt.Sprintf("%s@%s", ref.Context(), hash.String()))
+	ref, err := name.NewDigest(fmt.Sprintf("%s@%s", fromRef.Context(), hash.String()))
 	if err != nil {
 		return err
 	}
 	shadst := fmt.Sprintf("%s@%s", dstRef.Context(), hash.String())
-	shaDstRef, err := name.ParseReference(shadst)
+	shaDstRef, err := name.NewDigest(shadst)
 	if err != nil {
 		return err
 	}
@@ -41,10 +43,11 @@ func ExecuteContext(ctx context.Context, fromLocation, to, digest string) error 
 		dst, err := remote.Get(dstRef, remote.WithAuthFromKeychain(authn.DefaultKeychain), remote.WithContext(ctx))
 		if err == nil {
 			// if the dst manifest exists, check if it's the same as the src
-			logs.Progress.Printf("found manifest for %s", dstRef)
 			if dst.Digest.String() == hash.String() {
+				logs.Progress.Printf("found manifest for %s digest %s", dstRef, dst.Digest)
 				return nil
 			}
+			logs.Progress.Printf("manifest digest for %s expected %s got %s", shaDstRef, hash, dst.Digest)
 		}
 	} else {
 		logs.Progress.Printf("fetching manifest for %s", shaDstRef)
@@ -59,19 +62,47 @@ func ExecuteContext(ctx context.Context, fromLocation, to, digest string) error 
 	logs.Progress.Printf("fetching manifest for %s", ref)
 	src, err := remote.Get(ref, remote.WithAuthFromKeychain(authn.DefaultKeychain), remote.WithContext(ctx))
 	if err != nil {
-		return err
+		logs.Warn.Printf("unable to fetch source manifest %s: %v", ref, err)
+		if e, ok := err.(*transport.Error); ok && e.StatusCode == 404 {
+			if _, isTagSrc := fromRef.(name.Tag); isTagSrc {
+				// fetch the tag to get the digest
+				logs.Progress.Printf("fetching %s", fromRef)
+				src2, err := remote.Get(fromRef, remote.WithAuthFromKeychain(authn.DefaultKeychain), remote.WithContext(ctx))
+				if err != nil {
+					return fmt.Errorf("unable to fetch image %s not found: %v", fromRef, err)
+				}
+				return fmt.Errorf("source image %s has digest %s", fromRef, src2.Digest)
+			}
+			return fmt.Errorf("source image %s not found", ref)
+		}
+		return fmt.Errorf("unable to fetch source manifest %s: %v", ref, err)
 	}
 	if src.Digest != hash {
 		return fmt.Errorf("src digest %s does not match expected %s", src.Digest, hash)
 	}
-	logs.Progress.Printf("fetching image for %s", ref)
-	image, err := src.Image()
-	if err != nil {
-		return fmt.Errorf("unable to fetch source image %s: %v", ref, err)
-	}
-	logs.Progress.Printf("pushing image to %s", dstRef)
-	if err := remote.Write(dstRef, image, remote.WithAuthFromKeychain(authn.DefaultKeychain), remote.WithContext(ctx)); err != nil {
-		return err
+	switch src.MediaType {
+	case types.OCIImageIndex, types.DockerManifestList:
+		logs.Progress.Printf("fetching index for %s", ref)
+		index, err := src.ImageIndex()
+		if err != nil {
+			return fmt.Errorf("unable to fetch source image index %s: %v", ref, err)
+		}
+		logs.Progress.Printf("pushing index to %s", dstRef)
+		if err := remote.WriteIndex(dstRef, index, remote.WithAuthFromKeychain(authn.DefaultKeychain), remote.WithContext(ctx)); err != nil {
+			return err
+		}
+	case types.OCIManifestSchema1, types.DockerManifestSchema2:
+		logs.Progress.Printf("fetching image for %s", ref)
+		image, err := src.Image()
+		if err != nil {
+			return fmt.Errorf("unable to fetch source image %s: %v", ref, err)
+		}
+		logs.Progress.Printf("pushing image to %s", dstRef)
+		if err := remote.Write(dstRef, image, remote.WithAuthFromKeychain(authn.DefaultKeychain), remote.WithContext(ctx)); err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("unexpected media type for %s: %s", ref, src.MediaType)
 	}
 
 	return nil

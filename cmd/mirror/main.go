@@ -40,6 +40,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
 	if err := mirror.ExecuteContext(ctx, FromLocation, To, Digest); err != nil {
-		cancel()
+		logs.Warn.Printf("Failed to mirror %s to %s: %v", FromLocation, To, err)
+		os.Exit(1)
 	}
 }
