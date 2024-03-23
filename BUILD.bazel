@@ -12,6 +12,10 @@ gazelle_binary(
 gazelle(
     name = "gazelle",
     command = "fix",
+    extra_args = [
+        "-proto",
+        "disable_global",
+    ],
     gazelle = ":gazelle_bin",
 )
 
@@ -22,6 +26,8 @@ gazelle(
         "-from_file=go.mod",
         "-to_macro=go_repositories.bzl%go_dependencies",
         "-prune=true",
+        "-build_file_proto_mode=disable_global",
+        "-build_file_generation=on",
     ],
 )
 

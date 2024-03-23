@@ -3,7 +3,7 @@ module github.com/fasterci/rules_mirror
 go 1.19
 
 require (
-	github.com/adobe/rules_gitops v0.14.0
+	github.com/fasterci/rules_gitops v0.0.0-20240313013743-055f2e7768fc
 	github.com/google/go-containerregistry v0.19.1
 )
 

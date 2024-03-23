@@ -75,5 +75,5 @@ go_test(
     ],
     data = [":simple_server_it.setup"],
     rundir = ".",
-    deps = ["@com_github_adobe_rules_gitops//testing/it_sidecar/client:go_default_library"],
+    deps = ["@com_github_fasterci_rules_gitops//testing/it_sidecar/client"],
 )
