@@ -66,7 +66,7 @@ k8s_test_setup(
 )
 
 go_test(
-    name = "simple_server_test",
+    name = "tests_test",
     size = "large",
     srcs = ["simple_server_test.go"],
     args = [
