@@ -77,9 +77,3 @@ go_test(
     rundir = ".",
     deps = ["@com_github_adobe_rules_gitops//testing/it_sidecar/client:go_default_library"],
 )
-
-go_test(
-    name = "tests_test",
-    srcs = ["simple_server_test.go"],
-    deps = ["@com_github_adobe_rules_gitops//testing/it_sidecar/client"],
-)
