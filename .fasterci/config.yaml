@@ -3,10 +3,7 @@
 workflows:
 
   - &build_workflow
-    name: Faster CI / build (6.1.0)
-    env:
-      USE_BAZEL_VERSION: "6.1.0"
-    image: us.gcr.io/fasterci/bazelbuilder:9530886
+    name: Faster CI / build (current)
     on:
       push:
         branches:
@@ -14,6 +11,8 @@ workflows:
       pull_request:
         branches:
           - "**"
+    init: |
+      kubectl config set-cluster kind --insecure-skip-tls-verify=true --server=http://127.0.0.1
     steps:
       - name: Build & test
         bazel:
