@@ -13,7 +13,7 @@ workflows:
         branches:
           - "**"
     init: |
-      kubectl config set-cluster kind --insecure-skip-tls-verify=true --server=http://127.0.0.1
+      kubectl config set-cluster dummy --insecure-skip-tls-verify=true --server=http://127.0.0.1
     steps:
       - name: Build & test
         bazel:
