@@ -124,7 +124,7 @@ load("@com_adobe_rules_gitops//skylib:k8s.bzl", "kubeconfig")
 
 kubeconfig(
     name = "k8s_test",
-    cluster = "kind",
+    cluster = "dummy",
     use_host_config = True,
 )
 
@@ -142,6 +142,6 @@ load("@rules_gitops//skylib:k8s.bzl", rg_kubeconfig = "kubeconfig")
 
 rg_kubeconfig(
     name = "rg_remote_test",
-    cluster = "kind",
+    cluster = "dummy",
     use_host_config = True,
 )

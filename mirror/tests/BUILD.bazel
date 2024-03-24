@@ -45,8 +45,6 @@ mirror_image(
     visibility = ["//visibility:public"],
 )
 
-
-
 kustomize(
     name = "kustomize1",
     images = [
@@ -114,12 +112,15 @@ assert_contains(
     expected = "image: localhost:1338/mirror/localhost/1338/image@sha256:b812c0570a7c369b2863c64e22760dc1b1dbc025a739f02db376bac62862f4cc",
 )
 
-exports_files(["kubectl"])
+exports_files([
+    "kubectl",
+    "kubeconfig.yaml",
+])
 
 # Execution of this setup should push the mirrored image to the registry
 k8s_test_setup(
     name = "adobe_gitops.setup",
-    kubeconfig = "@k8s_test//:kubeconfig",
+    # kubeconfig = ":kubeconfig.yaml",
     kubectl = ":kubectl",
     objects = [
         ":adobe_gitops_deploy",
@@ -175,7 +176,7 @@ sh_test(
 # Execution of this setup should push the mirrored image to the registry
 k8s_test_setup_rg(
     name = "fasterci_gitops.setup",
-    kubeconfig = "@k8s_test//:kubeconfig",
+    # kubeconfig = ":kubeconfig.yaml",
     kubectl = ":kubectl",
     objects = [
         ":fasterci_gitops_deploy",

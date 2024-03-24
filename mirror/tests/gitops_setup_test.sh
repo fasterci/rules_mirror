@@ -16,8 +16,10 @@ export K8S_MYNAMESPACE
 kubectl_path=$(dirname ${KUBECTL})
 export PATH=${kubectl_path}:${PATH}
 
+export KUBERNETES_MASTER=https://127.0.0.1:6443
+
 echo executing test setup script $1
-$1
+bash -x $1
 if [ $? -ne 0 ]; then
   echo "Test setup script failed"
   exit 1
