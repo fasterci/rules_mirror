@@ -4,6 +4,7 @@ workflows:
 
   - &build_workflow
     name: Faster CI / build (current)
+    image: us.gcr.io/fasterci/bazelbuilder:9530886
     on:
       push:
         branches:
