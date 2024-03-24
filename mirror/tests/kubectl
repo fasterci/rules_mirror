@@ -1,0 +1,7 @@
+#!/bin/bash
+echo "fake kubectl $*"
+if [[ $1 == "apply" ]]; then
+  echo "faking kubectl apply -f "
+  cat >/dev/null
+  exit 0
+fi 

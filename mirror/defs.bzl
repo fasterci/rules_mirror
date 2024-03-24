@@ -82,7 +82,7 @@ def _mirror_image_impl(ctx):
         ),
     ]
 
-mirror_image = rule(
+mirror_image_rule = rule(
     implementation = _mirror_image_impl,
     attrs = {
         "src_image": attr.string(
@@ -114,6 +114,50 @@ mirror_image = rule(
     },
     executable = True,
     doc = """Mirror an image to a local registry. 
-Implements the K8sPushInfo provider so the returned image can be injected into manifests by rules_gitops
+Implements GitopsPushInfo and K8sPushInfo providers so the returned image can be injected into manifests by rules_gitops
 """,
 )
+
+def validate_image_test(name, image, digest, tags = [], **kwargs):
+    """
+    Create a test that validates the image existance using crane validate.
+    Image tag will be ignored if provided and only the digest will be used.
+    if digest is provided as a part of the image, it will be used.
+    It is an error to provide both digest and image with digest if they do not match.
+    """
+    src_image = image
+    v = src_image.split("@", 1)
+    s = v[0]
+    if len(v) > 1:
+        # If the image has a digest, use that.
+        if digest and v[1] != digest:
+            fail("digest mismatch: %s != %s" % (v[1], digest))
+        digest = v[1]
+    else:
+        # If the image does not have a digest, use the one provided.
+        src_image = s + "@" + digest
+
+    if not digest:
+        fail("digest must be provided as an attribute to mirror_image or in the src_image")
+
+    native.sh_test(
+        name = name,
+        size = "small",
+        srcs = ["//mirror:validate_image.sh"],
+        data = [
+            "@com_github_google_go_containerregistry//cmd/crane:crane",
+        ],
+        args = [
+            src_image,
+        ],
+        tags = ["requires-network"] + tags,
+        env = {
+            "CRANE_BIN": "$(location @com_github_google_go_containerregistry//cmd/crane:crane)",
+        },
+        **kwargs
+    )
+
+def mirror_image(name, src_image, digest, **kwargs):
+    visibility = kwargs.pop("visibility", None)
+    mirror_image_rule(name = name, src_image = src_image, digest = digest, **kwargs)
+    validate_image_test(name = name + "_validate_src", image = src_image, digest = digest, visibility = visibility)
