@@ -143,7 +143,7 @@ def validate_image_test(name, image, digest, tags = [], **kwargs):
     native.sh_test(
         name = name,
         size = "small",
-        srcs = ["//mirror:validate_image.sh"],
+        srcs = ["@com_fasterci_rules_mirror//mirror:validate_image.sh"],
         data = [
             "@com_github_google_go_containerregistry//cmd/crane:crane",
         ],
