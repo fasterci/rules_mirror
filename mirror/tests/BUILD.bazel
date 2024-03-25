@@ -189,6 +189,8 @@ k8s_test_setup_rg(
 )
 
 # run the setup and verify the mirrored image is pushed
+# this test is marked manual because it runs the it_sidecar as a last step so it requires a running k8s cluster.
+# TODO: provide proper stubs after https://github.com/fasterci/rules_gitops/issues/23 is resolved
 sh_test(
     name = "fasterci_gitops_setup_test",
     srcs = ["gitops_setup_test.sh"],
