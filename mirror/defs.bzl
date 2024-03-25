@@ -159,5 +159,5 @@ def validate_image_test(name, image, digest, tags = [], **kwargs):
 
 def mirror_image(name, src_image, digest, tags = [], **kwargs):
     visibility = kwargs.pop("visibility", None)
-    mirror_image_rule(name = name, src_image = src_image, digest = digest, tags = tags, **kwargs)
+    mirror_image_rule(name = name, src_image = src_image, digest = digest, tags = tags, visibility = visibility, **kwargs)
     validate_image_test(name = name + "_validate_src", image = src_image, digest = digest, visibility = visibility, tags = tags)
