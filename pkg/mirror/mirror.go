@@ -37,28 +37,16 @@ func ExecuteContext(ctx context.Context, fromLocation, to, digest string) error 
 	if err != nil {
 		return err
 	}
-	// check if dst exists already
-	if _, ok := dstRef.(name.Tag); ok {
-		logs.Progress.Printf("fetching manifest for %s", dstRef)
-		dst, err := remote.Get(dstRef, remote.WithAuthFromKeychain(authn.DefaultKeychain), remote.WithContext(ctx))
-		if err == nil {
-			// if the dst manifest exists, check if it's the same as the src
-			if dst.Digest.String() == hash.String() {
-				logs.Progress.Printf("found manifest for %s digest %s", dstRef, dst.Digest)
-				return nil
-			}
-			logs.Progress.Printf("manifest digest for %s expected %s got %s", shaDstRef, hash, dst.Digest)
-		}
-	} else {
-		logs.Progress.Printf("fetching manifest for %s", shaDstRef)
-		_, err = remote.Head(shaDstRef, remote.WithAuthFromKeychain(authn.DefaultKeychain), remote.WithContext(ctx))
-		if err == nil {
-			// if the dst manifest exists, check if it's the same as the src
-			logs.Progress.Printf("found manifest for %s", shaDstRef)
-			return nil
-		}
-
+	// check if dst exists already.
+	// We are not verifying if the dst has the same tag
+	logs.Progress.Printf("fetching manifest for %s", shaDstRef)
+	_, err = remote.Head(shaDstRef, remote.WithAuthFromKeychain(authn.DefaultKeychain), remote.WithContext(ctx))
+	if err == nil {
+		// if the dst manifest exists, check if it's the same as the src
+		logs.Progress.Printf("found manifest for %s", shaDstRef)
+		return nil
 	}
+
 	logs.Progress.Printf("fetching manifest for %s", ref)
 	src, err := remote.Get(ref, remote.WithAuthFromKeychain(authn.DefaultKeychain), remote.WithContext(ctx))
 	if err != nil {
