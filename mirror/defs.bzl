@@ -4,6 +4,13 @@ load("@rules_gitops//gitops:provider.bzl", "GitopsPushInfo")
 load("@com_adobe_rules_gitops//skylib:push.bzl", "K8sPushInfo")
 load("@rules_gitops//skylib:runfile.bzl", "get_runfile_path")
 
+def _replace_colon_except_last_segment(input_string):
+    segments = input_string.split("/")
+    for i in range(len(segments) - 1):
+        segments[i] = segments[i].replace(":", "")
+    output_string = "/".join(segments)
+    return output_string
+
 def _mirror_image_impl(ctx):
     digest = ctx.attr.digest
     src_image = ctx.attr.src_image
@@ -25,17 +32,11 @@ def _mirror_image_impl(ctx):
     if ctx.attr.dst:
         dst = ctx.expand_make_variables("dst", ctx.attr.dst, {})
         dst = dst.split("@", 1)[0]
-        v = dst.split(":", 1)
-        dst_without_hash = v[0]
-        if len(v) > 1:
-            fail("dst should not include a tag, only a repository")
+        dst_without_hash = _replace_colon_except_last_segment(dst)
     else:
         if not ctx.attr.dst_prefix:
             fail("either dst or dst_prefix must be defined in mirror_image")
-        v = s.split(":", 1)
-        src_repository = v[0]
-        if len(v) > 1:
-            src_repository = src_repository + "/" + v[1]
+        src_repository = _replace_colon_except_last_segment(s)
         dst_prefix = ctx.expand_make_variables("dst_prefix", ctx.attr.dst_prefix, {})
         dst_without_hash = dst_prefix.strip("/") + "/" + src_repository
 

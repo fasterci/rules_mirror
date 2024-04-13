@@ -32,6 +32,7 @@ assert_contains(
 oci_push(
     name = "push_image",
     image = ":image",
+    remote_tags = ["tag1"],
     repository = "localhost:1338/image",
     visibility = ["//visibility:public"],
 )
@@ -41,6 +42,15 @@ mirror_image(
     digest = "sha256:b812c0570a7c369b2863c64e22760dc1b1dbc025a739f02db376bac62862f4cc",
     dst_prefix = "localhost:1338/mirror",
     src_image = "localhost:1338/image",
+    tags = ["manual"],  # test should be tagged manual since it requires a running registry
+    visibility = ["//visibility:public"],
+)
+
+mirror_image(
+    name = "image_mirror_with_tag",
+    digest = "sha256:b812c0570a7c369b2863c64e22760dc1b1dbc025a739f02db376bac62862f4cc",
+    dst_prefix = "localhost:1338/mirror2",
+    src_image = "localhost:1338/image:tag1",
     tags = ["manual"],  # test should be tagged manual since it requires a running registry
     visibility = ["//visibility:public"],
 )
@@ -105,13 +115,13 @@ k8s_deploy_rg(
 assert_contains(
     name = "adobe_gitops_deploy_has_mirrored_image",
     actual = ":adobe_gitops_deploy",
-    expected = "image: localhost:1338/mirror/localhost/1338/image@sha256:b812c0570a7c369b2863c64e22760dc1b1dbc025a739f02db376bac62862f4cc",
+    expected = "image: localhost:1338/mirror/localhost1338/image@sha256:b812c0570a7c369b2863c64e22760dc1b1dbc025a739f02db376bac62862f4cc",
 )
 
 assert_contains(
     name = "fasterci_gitops_deploy_has_mirrored_image",
     actual = ":fasterci_gitops_deploy",
-    expected = "image: localhost:1338/mirror/localhost/1338/image@sha256:b812c0570a7c369b2863c64e22760dc1b1dbc025a739f02db376bac62862f4cc",
+    expected = "image: localhost:1338/mirror/localhost1338/image@sha256:b812c0570a7c369b2863c64e22760dc1b1dbc025a739f02db376bac62862f4cc",
 )
 
 exports_files([
@@ -159,7 +169,7 @@ sh_test(
     name = "adobe_gitops_apply_test",
     srcs = ["gitops_setup_test.sh"],
     args = [
-        "$(location :adobe_gitops_deploy.apply) localhost:1338/mirror/localhost/1338/image@sha256:b812c0570a7c369b2863c64e22760dc1b1dbc025a739f02db376bac62862f4cc",
+        "$(location :adobe_gitops_deploy.apply) localhost:1338/mirror/localhost1338/image@sha256:b812c0570a7c369b2863c64e22760dc1b1dbc025a739f02db376bac62862f4cc",
     ],
     data = [
         ":adobe_gitops_deploy.apply",
@@ -195,7 +205,7 @@ sh_test(
     name = "fasterci_gitops_setup_test",
     srcs = ["gitops_setup_test.sh"],
     args = [
-        "$(location :fasterci_gitops.setup) localhost:1338/mirror/localhost/1338/image@sha256:b812c0570a7c369b2863c64e22760dc1b1dbc025a739f02db376bac62862f4cc",
+        "$(location :fasterci_gitops.setup) localhost:1338/mirror/localhost1338/image@sha256:b812c0570a7c369b2863c64e22760dc1b1dbc025a739f02db376bac62862f4cc",
     ],
     data = [
         ":fasterci_gitops.setup",
@@ -220,10 +230,54 @@ sh_test(
     name = "fasterci_gitops_apply_test",
     srcs = ["gitops_setup_test.sh"],
     args = [
-        "$(location :fasterci_gitops_deploy.apply) localhost:1338/mirror/localhost/1338/image@sha256:b812c0570a7c369b2863c64e22760dc1b1dbc025a739f02db376bac62862f4cc",
+        "$(location :fasterci_gitops_deploy.apply) localhost:1338/mirror/localhost1338/image@sha256:b812c0570a7c369b2863c64e22760dc1b1dbc025a739f02db376bac62862f4cc",
     ],
     data = [
         ":fasterci_gitops_deploy.apply",
+        ":kubectl",
+        ":push_image",
+        "@com_github_google_go_containerregistry//cmd/crane",
+        "@com_github_google_go_containerregistry//cmd/registry",
+    ],
+    env = {
+        "KUBECTL": "$(location :kubectl)",
+        "PUSH_IMAGE": "$(location :push_image)",
+        "CRANE_BIN": "$(location @com_github_google_go_containerregistry//cmd/crane)",
+        "REGISTRY_BIN": "$(location @com_github_google_go_containerregistry//cmd/registry)",
+    },
+    tags = ["exclusive"],  # this test starts a registry on fixed port 1338
+)
+
+sh_test(
+    name = "image_mirror_with_tag_test",
+    srcs = ["gitops_setup_test.sh"],
+    args = [
+        "$(location :image_mirror_with_tag) localhost:1338/mirror2/localhost1338/image@sha256:b812c0570a7c369b2863c64e22760dc1b1dbc025a739f02db376bac62862f4cc",
+    ],
+    data = [
+        ":image_mirror_with_tag",
+        ":kubectl",
+        ":push_image",
+        "@com_github_google_go_containerregistry//cmd/crane",
+        "@com_github_google_go_containerregistry//cmd/registry",
+    ],
+    env = {
+        "KUBECTL": "$(location :kubectl)",
+        "PUSH_IMAGE": "$(location :push_image)",
+        "CRANE_BIN": "$(location @com_github_google_go_containerregistry//cmd/crane)",
+        "REGISTRY_BIN": "$(location @com_github_google_go_containerregistry//cmd/registry)",
+    },
+    tags = ["exclusive"],  # this test starts a registry on fixed port 1338
+)
+
+sh_test(
+    name = "image_mirror_with_tag_test2",
+    srcs = ["gitops_setup_test.sh"],
+    args = [
+        "$(location :image_mirror_with_tag) localhost:1338/mirror2/localhost1338/image:tag1",
+    ],
+    data = [
+        ":image_mirror_with_tag",
         ":kubectl",
         ":push_image",
         "@com_github_google_go_containerregistry//cmd/crane",
