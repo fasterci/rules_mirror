@@ -12,4 +12,4 @@ function guess_runfiles() {
 
 RUNFILES="${PYTHON_RUNFILES:-$(guess_runfiles)}"
 
-{mirror_tool} -from {src_image} -digest {digest} -to {dst_image}
+{mirror_tool} -from {src_image} -digest {digest} -to {dst_image} -timeout {timeout}

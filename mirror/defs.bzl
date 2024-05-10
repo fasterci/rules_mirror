@@ -56,6 +56,7 @@ def _mirror_image_impl(ctx):
             "{src_image}": src_image,
             "{digest}": digest,
             "{dst_image}": dst_without_hash,
+            "{timeout}": ctx.attr.push_timeout,
         },
         is_executable = True,
     )
@@ -102,6 +103,10 @@ mirror_image_rule = rule(
         ),
         "dst": attr.string(
             doc = "The destination image location, should include the registry and repository. Either dst_prefix or dst_image must be specified.",
+        ),
+        "push_timeout": attr.string(
+            doc = "The allowed wait time for image pushes",
+            default = "30s",
         ),
         "mirror_tool": attr.label(
             default = Label("//cmd/mirror"),

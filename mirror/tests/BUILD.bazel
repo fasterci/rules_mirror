@@ -44,6 +44,7 @@ mirror_image(
     src_image = "localhost:1338/image",
     tags = ["manual"],  # test should be tagged manual since it requires a running registry
     visibility = ["//visibility:public"],
+    push_timeout = "60s",
 )
 
 mirror_image(
