@@ -1,7 +1,6 @@
 "Public API"
 
 load("@rules_gitops//gitops:provider.bzl", "GitopsPushInfo")
-load("@com_adobe_rules_gitops//skylib:push.bzl", "K8sPushInfo")
 load("@rules_gitops//skylib:runfile.bzl", "get_runfile_path")
 
 def _replace_colon_except_last_segment(input_string):
@@ -61,21 +60,12 @@ def _mirror_image_impl(ctx):
         is_executable = True,
     )
 
-    dst_registry, dst_repository = dst_without_hash.split("/", 1)
-
     runfiles = ctx.runfiles(files = pusher_input).merge(ctx.attr.mirror_tool[DefaultInfo].default_runfiles)
 
     return [
         DefaultInfo(
             runfiles = runfiles,
             executable = ctx.outputs.executable,
-        ),
-        K8sPushInfo(
-            image_label = ctx.label,
-            legacy_image_name = ctx.attr.image_name,
-            registry = dst_registry,
-            repository = dst_repository,
-            digestfile = digest_file,
         ),
         GitopsPushInfo(
             image_label = ctx.label,
@@ -92,7 +82,7 @@ mirror_image_rule = rule(
             doc = "The image to mirror",
         ),
         "image_name": attr.string(
-            doc = "The name that could be referred in manifests. This field is deprecated and used only in legacy com_adobe_rules_gitops.",
+            doc = "The name that could be referred in manifests. This field is deprecated and unused.",
         ),
         "digest": attr.string(
             mandatory = False,

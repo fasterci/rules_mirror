@@ -1,11 +1,9 @@
 load("@aspect_bazel_lib//lib:testing.bzl", "assert_contains")
-load("@com_adobe_rules_gitops//skylib/kustomize:kustomize.bzl", "kustomize")
-load("@com_adobe_rules_gitops//gitops:defs.bzl", "k8s_deploy", "k8s_test_setup")
-load("//mirror:defs.bzl", "mirror_image")
-load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push")
 load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_files")
-load("@rules_gitops//skylib/kustomize:kustomize.bzl", kustomize_rg = "kustomize")
-load("@rules_gitops//gitops:defs.bzl", k8s_deploy_rg = "k8s_deploy", k8s_test_setup_rg = "k8s_test_setup")
+load("@rules_gitops//gitops:defs.bzl", "k8s_deploy", "k8s_test_setup")
+load("@rules_gitops//skylib/kustomize:kustomize.bzl", "kustomize")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push")
+load("//mirror:defs.bzl", "mirror_image")
 
 # create a simple image for testing
 
@@ -41,10 +39,10 @@ mirror_image(
     name = "image_mirror",
     digest = "sha256:b812c0570a7c369b2863c64e22760dc1b1dbc025a739f02db376bac62862f4cc",
     dst_prefix = "localhost:1338/mirror",
+    push_timeout = "60s",
     src_image = "localhost:1338/image",
     tags = ["manual"],  # test should be tagged manual since it requires a running registry
     visibility = ["//visibility:public"],
-    push_timeout = "60s",
 )
 
 mirror_image(
@@ -67,40 +65,15 @@ kustomize(
     namespace = "",
 )
 
-kustomize_rg(
-    name = "kustomize2",
-    images = [
-        ":image_mirror",
-    ],
-    manifests = [
-        "deployment.yaml",
-    ],
-    namespace = "",
-)
-
 write_source_files(
     name = "write_golden_files",
     files = {
         "kustomize1.golden": ":kustomize1",
-        "kustomize2.golden": ":kustomize2",
     },
 )
 
 # use k8s_deploy with mirrored image
 k8s_deploy(
-    name = "adobe_gitops_deploy",
-    cluster = "dummy",
-    images = [
-        ":image_mirror",
-    ],
-    manifests = [
-        "deployment.yaml",
-        "service.yaml",
-    ],
-    namespace = "{BUILD_USER}",
-)
-
-k8s_deploy_rg(
     name = "fasterci_gitops_deploy",
     cluster = "dummy",
     images = [
@@ -114,12 +87,6 @@ k8s_deploy_rg(
 )
 
 assert_contains(
-    name = "adobe_gitops_deploy_has_mirrored_image",
-    actual = ":adobe_gitops_deploy",
-    expected = "image: localhost:1338/mirror/localhost1338/image@sha256:b812c0570a7c369b2863c64e22760dc1b1dbc025a739f02db376bac62862f4cc",
-)
-
-assert_contains(
     name = "fasterci_gitops_deploy_has_mirrored_image",
     actual = ":fasterci_gitops_deploy",
     expected = "image: localhost:1338/mirror/localhost1338/image@sha256:b812c0570a7c369b2863c64e22760dc1b1dbc025a739f02db376bac62862f4cc",
@@ -130,68 +97,11 @@ exports_files([
     "kubeconfig.yaml",
 ])
 
-# Execution of this setup should push the mirrored image to the registry
-k8s_test_setup(
-    name = "adobe_gitops.setup",
-    kubeconfig = ":kubeconfig.yaml",
-    kubectl = ":kubectl",
-    objects = [
-        ":adobe_gitops_deploy",
-    ],
-)
-
-# run the setup and verify the mirrored image is pushed
-sh_test(
-    name = "adobe_gitops_setup_test",
-    srcs = ["gitops_setup_test.sh"],
-    args = [
-        "$(location :adobe_gitops.setup) localhost:1338/mirror/localhost/1338/image@sha256:b812c0570a7c369b2863c64e22760dc1b1dbc025a739f02db376bac62862f4cc",
-    ],
-    data = [
-        ":adobe_gitops.setup",
-        ":kubectl",
-        ":push_image",
-        "@com_github_google_go_containerregistry//cmd/crane",
-        "@com_github_google_go_containerregistry//cmd/registry",
-    ],
-    env = {
-        "KUBECTL": "$(location :kubectl)",
-        "PUSH_IMAGE": "$(location :push_image)",
-        "CRANE_BIN": "$(location @com_github_google_go_containerregistry//cmd/crane)",
-        "REGISTRY_BIN": "$(location @com_github_google_go_containerregistry//cmd/registry)",
-    },
-    tags = [
-        "exclusive",
-        "manual",
-    ],  # this test starts a registry on fixed port 1338
-)
-
-sh_test(
-    name = "adobe_gitops_apply_test",
-    srcs = ["gitops_setup_test.sh"],
-    args = [
-        "$(location :adobe_gitops_deploy.apply) localhost:1338/mirror/localhost1338/image@sha256:b812c0570a7c369b2863c64e22760dc1b1dbc025a739f02db376bac62862f4cc",
-    ],
-    data = [
-        ":adobe_gitops_deploy.apply",
-        ":kubectl",
-        ":push_image",
-        "@com_github_google_go_containerregistry//cmd/crane",
-        "@com_github_google_go_containerregistry//cmd/registry",
-    ],
-    env = {
-        "KUBECTL": "$(location :kubectl)",
-        "PUSH_IMAGE": "$(location :push_image)",
-        "CRANE_BIN": "$(location @com_github_google_go_containerregistry//cmd/crane)",
-        "REGISTRY_BIN": "$(location @com_github_google_go_containerregistry//cmd/registry)",
-    },
-    tags = ["exclusive"],  # this test starts a registry on fixed port 1338
-)
-
 # very it works with fasterci too
 # Execution of this setup should push the mirrored image to the registry
-k8s_test_setup_rg(
+k8s_test_setup(
     name = "fasterci_gitops.setup",
+    cluster = "@k8s_test//:cluster",
     kubeconfig = ":kubeconfig.yaml",
     kubectl = ":kubectl",
     objects = [
