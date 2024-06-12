@@ -4,12 +4,6 @@ workspace(
 )
 # gazelle:repo bazel_gazelle
 
-# optionally override the default version of rules_gitops with a local copy
-# local_repository(
-#     name = "com_adobe_rules_gitops",
-#     path = "../rules_gitops",
-# )
-
 #Fetch deps needed for local development"
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
@@ -18,20 +12,6 @@ http_archive(
     sha256 = "4a276e9566c03491649eef63f27c2816cc222f41ccdebd97d2c5159e84917c3b",
     strip_prefix = "rules_oci-1.7.4",
     url = "https://github.com/bazel-contrib/rules_oci/releases/download/v1.7.4/rules_oci-v1.7.4.tar.gz",
-)
-
-load("@rules_oci//oci:dependencies.bzl", "rules_oci_dependencies")
-
-rules_oci_dependencies()
-
-load("@rules_oci//oci:repositories.bzl", "LATEST_CRANE_VERSION", "oci_register_toolchains")
-
-oci_register_toolchains(
-    name = "oci",
-    crane_version = LATEST_CRANE_VERSION,
-    # Uncommenting the zot toolchain will cause it to be used instead of crane for some tasks.
-    # Note that it does not support docker-format images.
-    # zot_version = LATEST_ZOT_VERSION,
 )
 
 http_archive(
@@ -76,9 +56,9 @@ http_archive(
 
 http_archive(
     name = "aspect_bazel_lib",
-    sha256 = "44f4f6d1ea1fc5a79ed6ca83f875038fee0a0c47db4f9c9beed097e56f8fad03",
-    strip_prefix = "bazel-lib-1.34.0",
-    url = "https://github.com/aspect-build/bazel-lib/releases/download/v1.34.0/bazel-lib-v1.34.0.tar.gz",
+    sha256 = "6d758a8f646ecee7a3e294fbe4386daafbe0e5966723009c290d493f227c390b",
+    strip_prefix = "bazel-lib-2.7.7",
+    url = "https://github.com/aspect-build/bazel-lib/releases/download/v2.7.7/bazel-lib-v2.7.7.tar.gz",
 )
 
 load("//mirror:repositories.bzl", "rules_mirror_dependencies")
@@ -86,19 +66,40 @@ load("//mirror:repositories.bzl", "rules_mirror_dependencies")
 # Fetch dependencies which users need as well
 rules_mirror_dependencies()
 
+load("@rules_oci//oci:dependencies.bzl", "rules_oci_dependencies")
+
+rules_oci_dependencies()
+
+load("@rules_oci//oci:repositories.bzl", "LATEST_CRANE_VERSION", "oci_register_toolchains")
+
+oci_register_toolchains(
+    name = "oci",
+    crane_version = LATEST_CRANE_VERSION,
+    # Uncommenting the zot toolchain will cause it to be used instead of crane for some tasks.
+    # Note that it does not support docker-format images.
+    # zot_version = LATEST_ZOT_VERSION,
+)
+
 # For running our own unit tests
 load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
 
 bazel_skylib_workspace()
 
-load("@aspect_bazel_lib//lib:repositories.bzl", "aspect_bazel_lib_dependencies")
+# load("@aspect_bazel_lib//lib:repositories.bzl", "aspect_bazel_lib_dependencies")
 
-aspect_bazel_lib_dependencies()
+# Required bazel-lib dependencies
+
+# aspect_bazel_lib_dependencies()
+
+# Register bazel-lib toolchains
+
+#aspect_bazel_lib_register_toolchains()
+
+load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies")
 
 ############################################
 # Gazelle, for generating bzl_library targets
 load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
-load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies")
 load("//:go_repositories.bzl", "go_dependencies")
 
 # gazelle:repository_macro go_repositories.bzl%go_dependencies
@@ -111,37 +112,19 @@ go_register_toolchains(version = "1.19.3")
 gazelle_dependencies()
 
 ############################################
-# Setup for com_adobe_rules_gitops
-load("@com_adobe_rules_gitops//gitops:deps.bzl", "rules_gitops_dependencies")
+# Setup for rules_gitops
+load("@rules_gitops//gitops:deps.bzl", "rules_gitops_dependencies")
 
 rules_gitops_dependencies()
 
-load("@com_adobe_rules_gitops//gitops:repositories.bzl", "rules_gitops_repositories")
+load("@rules_gitops//gitops:repositories.bzl", "rules_gitops_repositories")
 
 rules_gitops_repositories()
 
-load("@com_adobe_rules_gitops//skylib:k8s.bzl", "kubeconfig")
+load("@rules_gitops//skylib:k8s.bzl", "kubeconfig")
 
 kubeconfig(
     name = "k8s_test",
-    cluster = "dummy",
-    use_host_config = True,
-)
-
-############################################
-# Setup for rules_gitops
-load("@rules_gitops//gitops:deps.bzl", rg_dependencies = "rules_gitops_dependencies")
-
-rg_dependencies()
-
-load("@rules_gitops//gitops:repositories.bzl", rg_repositories = "rules_gitops_repositories")
-
-rg_repositories()
-
-load("@rules_gitops//skylib:k8s.bzl", rg_kubeconfig = "kubeconfig")
-
-rg_kubeconfig(
-    name = "rg_remote_test",
     cluster = "dummy",
     use_host_config = True,
 )
