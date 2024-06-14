@@ -15,6 +15,7 @@ github.com/docker/docker-credential-helpers v0.7.0 h1:xtCHsjxogADNZcdv1pKUHXryef
 github.com/docker/docker-credential-helpers v0.7.0/go.mod h1:rETQfLdHNT3foU5kuNkFR1R1V12OJRRO5lzt2D1b5X0=
 github.com/fasterci/rules_gitops v0.0.0-20240313013743-055f2e7768fc h1:MIxNp+8geW2EE2jYf2R1RBLaqCSbAnn4K0AllE8v2Mo=
 github.com/fasterci/rules_gitops v0.0.0-20240313013743-055f2e7768fc/go.mod h1:ZBq3Y6QurfEQmJXFMfVUPacdipmg0pjxiItp3ChuJWU=
+github.com/fasterci/rules_gitops v0.32.9/go.mod h1:mBojeF8sAey0rG/VWabuiDC3GMwG9tmpmC36rzwiXnc=
 github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
 github.com/google/go-containerregistry v0.19.1 h1:yMQ62Al6/V0Z7CqIrrS1iYoA5/oQCm88DeNujc7C1KY=
 github.com/google/go-containerregistry v0.19.1/go.mod h1:YCMFNQeeXeLF+dnhhWkqDItx/JSkH01j1Kis4PsjzFI=
