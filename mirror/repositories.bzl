@@ -23,9 +23,9 @@ def rules_mirror_dependencies():
 
     http_archive(
         name = "rules_oci",
-        sha256 = "176e601d21d1151efd88b6b027a24e782493c5d623d8c6211c7767f306d655c8",
-        strip_prefix = "rules_oci-1.2.0",
-        url = "https://github.com/bazel-contrib/rules_oci/releases/download/v1.2.0/rules_oci-v1.2.0.tar.gz",
+        sha256 = "46ce9edcff4d3d7b3a550774b82396c0fa619cc9ce9da00c1b09a08b45ea5a14",
+        strip_prefix = "rules_oci-1.8.0",
+        url = "https://github.com/bazel-contrib/rules_oci/releases/download/v1.8.0/rules_oci-v1.8.0.tar.gz",
     )
 
     http_archive(
