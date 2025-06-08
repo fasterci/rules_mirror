@@ -30,7 +30,7 @@ def rules_mirror_dependencies():
 
     http_archive(
         name = "rules_gitops",
-        sha256 = "37be3b22375a91b0839385364882938a972564c5510b6c6ca92f6bfc0221fe79",
-        strip_prefix = "rules_gitops-0.31.6",
-        urls = ["https://github.com/fasterci/rules_gitops/releases/download/v0.31.6/rules_gitops-v0.31.6.tar.gz"],
+        sha256 = "307f179425b9a4814abd40adbfc66f82fdd14188b7198a0d61b78a596630b6ba",
+        strip_prefix = "rules_gitops-0.33.0",
+        urls = ["https://github.com/fasterci/rules_gitops/releases/download/v0.33.0/rules_gitops-v0.33.0.tar.gz"],
     )
