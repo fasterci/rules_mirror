@@ -26,10 +26,10 @@ http_archive(
 # gazelle is required by go_image_repositories
 http_archive(
     name = "bazel_gazelle",
-    sha256 = "29218f8e0cebe583643cbf93cae6f971be8a2484cdcfa1e45057658df8d54002",
+    sha256 = "fec7a24acb027359eb7d2b31d116b17c81d2fab35842f6bfb2dd5945e1071346",
     urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/bazel-gazelle/releases/download/v0.32.0/bazel-gazelle-v0.32.0.tar.gz",
-        "https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.32.0/bazel-gazelle-v0.32.0.tar.gz",
+        "https://mirror.bazel.build/github.com/bazelbuild/bazel-gazelle/releases/download/v0.53.0/bazel-gazelle-v0.53.0.tar.gz",
+        "https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.53.0/bazel-gazelle-v0.53.0.tar.gz",
     ],
 )
 
