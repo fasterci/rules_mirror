@@ -1,6 +1,6 @@
 module github.com/fasterci/rules_mirror
 
-go 1.19
+go 1.24
 
 require (
 	github.com/fasterci/rules_gitops v0.0.0-20240313013743-055f2e7768fc
@@ -13,7 +13,7 @@ require (
 	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/docker/docker v24.0.0+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
-	github.com/klauspost/compress v1.16.5 // indirect
+	github.com/klauspost/compress v1.18.7 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc3 // indirect
